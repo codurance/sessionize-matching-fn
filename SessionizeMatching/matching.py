@@ -2,7 +2,7 @@
 
 
 def match(prev_pairing, users_preferences):
-
+    # users_preferences = reformat_input_for_function(users_preferences)
     language_popularities = define_language_popularity(users_preferences)
     user_popularities = define_user_popularities(users_preferences, language_popularities)
     pairings = minimal_pairings_recursive(prev_pairing, user_popularities, language_popularities, users_preferences, {})
@@ -10,10 +10,16 @@ def match(prev_pairing, users_preferences):
 
     return pairings
 
+# def reformat_input_for_function(users_preferences):
+#     reformatted = {}
+#     for user in users_preferences:
+#         reformatted[user["user"]] = user["preferences"]
+#     return reformatted
+
 def calculate_quality_of_pairing(pairings, users_preferences, quality):
     if (bool(pairings)):
-        first_pair = next(iter(pairings)) # {1 : {2 : "java"}}
-        print(first_pair) #1
+        first_pair = next(iter(pairings))
+        print(first_pair) 
         preferences = users_preferences[first_pair] #1[groovy, python c#]
         print (preferences)
 

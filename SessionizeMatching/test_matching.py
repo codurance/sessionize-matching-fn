@@ -13,8 +13,34 @@ def set_usersAndPreferences():
         7 : ["Javascript", "Ruby", "VB"],    #Cameron
         8 : ["Java", "Python", "Delphi"],    #Sophie
     }
-
     return usersAndPreferences
+
+# def test_reformat_input():
+#     original_format = [
+#         {
+#             "user": "sophie",
+#             "preferences": {
+#                     "pref1": "lang1",
+#                     "pref2": "lang2",
+#                     "pref3": "lang3"
+#             }
+#         },
+#         {
+#             "user": "george",
+#             "preferences": {
+#                     "pref1": "lang1",
+#                     "pref2": "lang2",
+#                     "pref3": "lang3"
+#             }
+#         }
+#     ]
+#     correct_format = {
+#         "sophie" : ["lang1", "lang2", "lang3"],
+#         "george" : ["lang1", "lang2", "lang3"]
+#     }
+#     returned_format = reformat_input_for_function(original_format)
+#     assert correct_format == returned_format
+
 
 def test_language_weightings():
     usersAndPreferences = set_usersAndPreferences()
