@@ -1,0 +1,14 @@
+[
+    {
+        "user": "1",
+        "preferences": {
+                "pref1": "Java"
+        }
+    },
+    {
+        "user": "2",
+        "preferences": {
+                "pref1": "Java"
+        }
+    }
+]

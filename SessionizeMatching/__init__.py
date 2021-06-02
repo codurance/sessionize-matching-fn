@@ -1,20 +1,17 @@
 import logging
 
-import azure.functions as func
-from . import matching
-from . import test_matching
-import json
+from SessionizeMatching.function import matching
 
+import azure.functions as func
+import json
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
     matchRequest = req.params.get('matchRequest')
-    print(matchRequest)
     if not matchRequest:
         try:
             req_body = req.get_json()
-            print(req_body)
         except ValueError:
             pass
         else:
@@ -26,6 +23,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # return func.HttpResponse(f"Hello, {matchRequest}. This HTTP triggered function executed successfully.")
     else:
         return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a matchRequest in the query string or in the request body for a personalized response.",
-             status_code=200
+            "This HTTP triggered function executed successfully. Pass a matchRequest in the query string or in the request body for a personalized response.",
+            status_code=200
         )
