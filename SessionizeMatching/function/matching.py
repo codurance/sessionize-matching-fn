@@ -1,21 +1,20 @@
 #import pandas as pd
 from SessionizeMatching.function.pairing_list import PairingsList
+from SessionizeMatching.function.popularities import Popularities
 
 
 def match(prev_pairing, users_preferences):
     users_preferences = reformat_input_for_function(users_preferences)
     prev_pairing_object = prev_pairing_into_object(prev_pairing)
 
-    language_popularities = define_language_popularity(users_preferences)
-    user_popularities = define_user_popularities(users_preferences, language_popularities)
+    popularities = Popularities(users_preferences)
 
-    pairings = create_pairings(prev_pairing_object, user_popularities, language_popularities, users_preferences)
+    pairings = create_pairings(prev_pairing_object, popularities, users_preferences)
 
-    return pairings.return_list()
+    return pairings.listOfPairings
 
 def reformat_input_for_function(users_preferences):
     reformatted = {}
-    #dictionary comprehension - to research 
     for user in users_preferences:
         reformatted[user["user"]] = list(user["preferences"].values())
     return reformatted
@@ -26,9 +25,9 @@ def prev_pairing_into_object(prev_pairing):
         prev_pairing_object.addPairing(pairing["users"][0], pairing["users"][1], pairing["language"])
     return prev_pairing_object
 
-def create_pairings(prev_pairing_object, user_popularities, language_popularities, users_preferences):
+def create_pairings(prev_pairing_object, popularities, users_preferences):
     pairings = PairingsList()
-    pairings = minimal_pairings_recursive(prev_pairing_object, user_popularities, language_popularities, users_preferences, pairings)
+    pairings = minimal_pairings_recursive(prev_pairing_object, popularities, users_preferences, pairings)
     #quality_of_pairing = calculate_quality_of_pairing(pairings.copy(), users_preferences, 0)
     return pairings
 
@@ -41,74 +40,69 @@ def create_pairings(prev_pairing_object, user_popularities, language_popularitie
 #         preferences = users_preferences[first_pair] #1[groovy, python c#]
 #         print (preferences)
 #     return quality
+        
 
-def define_language_popularity(users_preferences):
-    language_popularity = {}
-    for user, preferences in users_preferences.items():
-        for language in preferences:
-            if language not in language_popularity:
-                language_popularity[language] = 0
-            else:
-                language_popularity[language] +=  1
-    return language_popularity
-
-def define_user_popularities(users_preferences, language_popularities):
-    #doc string
-    user_popularities = {}
-    for user, preferences in users_preferences.items():
-        popularity = 0
-        for language_priority, language in enumerate(reversed(preferences)):
-            language_priority += 1
-            popularity += (language_popularities[language] * language_priority)
-        user_popularities[user] = popularity
-    return user_popularities
-
-
-def minimal_pairings_recursive(prev_pairing, user_popularities, language_popularities, users_preferences, pairings):
-    if not user_popularities:
+def minimal_pairings_recursive(prev_pairing, popularities, users_preferences, pairings):
+    if not popularities.user_popularities:
+        pairings.try_match_unsuccessful()
         return pairings
     #better to convert to a list of pairings as this will preserve the order and then go by first index
-    user_popularities = dict(sorted(user_popularities.items(), key=lambda item: item[1]))
-    user = next(iter(user_popularities))
-    preferences = users_preferences[user]
+    least_popular_user = popularities.sort_user_popularities()
+    preferences = users_preferences[least_popular_user]
+    can_be_paired = False
     for preference in preferences:
-        language_popularity = language_popularities[preference]
+        language_popularity = popularities.language_popularities[preference]
         if language_popularity:
-            pairings_and_popularities = find_user_with_same_lang_pref(prev_pairing, users_preferences, user_popularities, preference, user, pairings)
-            user_popularities = pairings_and_popularities["user_popularities"]
-            pairings = pairings_and_popularities["pairings"]
-            minimal_pairings_recursive(prev_pairing, user_popularities, language_popularities, users_preferences, pairings)
+            can_be_paired = True
+            pairings_and_popularities = find_user_with_same_lang_pref(prev_pairing, users_preferences, popularities, preference, least_popular_user, pairings)
+            restart_recursive_call(pairings_and_popularities, popularities, users_preferences, prev_pairing)
             return pairings
+    if not can_be_paired:
+        pairings_and_popularities = set_unsuccessful_partner_with_no_match(pairings, popularities, least_popular_user)
+        restart_recursive_call(pairings_and_popularities, popularities, users_preferences, prev_pairing)
+        return pairings
 
+def restart_recursive_call(pairings_and_popularities, popularities, users_preferences, prev_pairing):
+    popularities = pairings_and_popularities["popularities"]
+    pairings = pairings_and_popularities["pairings"]
+    minimal_pairings_recursive(prev_pairing, popularities, users_preferences, pairings)
 
 def check_if_partner_is_suitable(first_partner, second_partner, prev_pairing):
-    if (second_partner == first_partner):
-        return False
-    if prev_pairing.check_if_paired_previously(first_partner, second_partner):
+    if (second_partner == first_partner) or prev_pairing.check_if_paired_previously(first_partner, second_partner):
         return False
     return True
 
-def find_user_with_same_lang_pref(prev_pairing, users_preferences, user_popularities, preference, first_partner, pairings):
+def set_unsuccessful_partner_with_no_match(pairings, popularities, first_partner):
+    pairings.try_pair_later(first_partner)
+    popularities.remove_from_user_popularities([first_partner])
+    return {"pairings" : pairings, "popularities": popularities}
+
+def set_successful_partner_with_match(pairings, first_partner, potential_partner, preference, popularities):
+    pairings.addPairing(first_partner, potential_partner, preference)
+    popularities.remove_from_user_popularities([first_partner, potential_partner])
+    return {"pairings" : pairings, "popularities": popularities}
+
+def check_language_pairing_choice_is_correct(preference, preference_order, second_partner_preference, second_partner_preferences):
+    if preference == second_partner_preference:
+        if preference_order is None or preference_order > second_partner_preferences.index(preference):
+            return True
+    return False
+
+def find_user_with_same_lang_pref(prev_pairing, users_preferences, popularities, preference, first_partner, pairings):
     preference_order = None
     potential_partner = first_partner
-    for second_partner in user_popularities.keys():
+    for second_partner in popularities.user_popularities.keys():
         if check_if_partner_is_suitable(first_partner, second_partner, prev_pairing):
-            preferences_second_partner = users_preferences[second_partner]
-            for second_partner_preference in preferences_second_partner:
-                if preference == second_partner_preference:
-                    if preference_order is None or preference_order > preferences_second_partner.index(preference):
-                        potential_partner = second_partner
-                        preference_order = preferences_second_partner.index(preference)
+            second_partner_preferences = users_preferences[second_partner]
+            for second_partner_preference in second_partner_preferences:
+                if check_language_pairing_choice_is_correct(preference, preference_order, second_partner_preference, second_partner_preferences):
+                    potential_partner = second_partner
+                    preference_order = second_partner_preferences.index(preference)
     if first_partner == potential_partner:
-        #This means there is noone who this person can be paired with on one of their language preferences
-        pairings.set_pairing_as_unsuccessful(first_partner)
-        user_popularities.pop(first_partner, None)
-        return {"pairings" : pairings, "user_popularities": user_popularities}
-    pairings.addPairing(first_partner, potential_partner, preference)
-    #pairings = create_pairing(first_partner, potential_partner, preference, pairings)
-    user_popularities.pop(first_partner, None)
-    user_popularities.pop(potential_partner, None)
-    return {"pairings" : pairings, "user_popularities": user_popularities}
+        return set_unsuccessful_partner_with_no_match(pairings, popularities, first_partner)
+    return set_successful_partner_with_match(pairings, first_partner, potential_partner, preference, popularities)
+
+
 
 
 

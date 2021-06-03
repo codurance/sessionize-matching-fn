@@ -1,6 +1,7 @@
 import sys
 
 from SessionizeMatching.function import matching
+from SessionizeMatching.function import popularities
 from . import resources
 #from SessionizeMatching.function.tests.resources import resources
 
@@ -98,14 +99,14 @@ def test_reformat_input():
         "george" : ["lang1", "lang2", "lang3"]
     }
     returned_format = matching.reformat_input_for_function(original_format)
-    print(returned_format)
     assert correct_format == returned_format
 
 
 def test_language_weightings():
     usersAndPreferences = set_usersAndPreferences()
     usersAndPreferences = matching.reformat_input_for_function(usersAndPreferences)
-    language_popularities = matching.define_language_popularity(usersAndPreferences)
+    popularities_class = popularities.Popularities(usersAndPreferences)
+    language_popularities = popularities_class.language_popularities
     correct_popularities = {
         "Java" : 3,
         "Kotlin" : 2,
@@ -125,8 +126,8 @@ def test_language_weightings():
 def test_user_popularities():
     usersAndPreferences = set_usersAndPreferences()
     usersAndPreferences = matching.reformat_input_for_function(usersAndPreferences)
-    language_popularities = matching.define_language_popularity(usersAndPreferences)
-    user_popularities = matching.define_user_popularities(usersAndPreferences, language_popularities)
+    popularities_class = popularities.Popularities(usersAndPreferences)
+    user_popularities = popularities_class.user_popularities
     correct_popularities = {
         "ben" : 17, 
         "joe" : 19, 
@@ -311,8 +312,54 @@ def test_acceptance_test_second_week_1():
             "language" : "Python"
         },
         {
-            "users" : ["cameron"],
-            "language" : "unsuccessful"
+            "users" : ["mark", "joe"],
+            "language"  : "Kotlin"
+        },
+        {
+            "users" : ["andras", "ben"],
+            "language" : "Java"
+        },
+        {
+            "users" : ["cameron","sarah"],
+            "language" : "N/A"
+        }
+    ]
+    assert pairings == slightly_correct_pairings
+
+def test_second_week_with_uneven_numbers():
+    previous_pairings = [
+        {
+            "users" : ["george", "sarah"],
+            "language" : "Python"
+        },
+        {
+            "users" : ["cameron", "andras"],
+            "language" : "Javascript"
+        },
+        {
+            "users" : ["mark", "ben"],
+            "language" : "Kotlin"
+        },
+        {
+            "users" : ["sophie","joe"],
+            "language" : "Java"
+        }
+    ]
+    usersAndPreferences = set_usersAndPreferences()
+    newTestUser = {
+            "user": "Jake",
+             "preferences": {
+                    "pref1": "UnknownLanguage1",
+                    "pref2": "UnknownLanguage2",
+                    "pref3": "UnknownLanguage3"
+            }
+    }
+    usersAndPreferences.append(newTestUser)
+    pairings = matching.match(previous_pairings, usersAndPreferences)
+    sub_optimal_pairings = [
+        {
+            "users" : ["george","sophie"], 
+            "language" : "Python"
         },
         {
             "users" : ["mark", "joe"],
@@ -323,59 +370,37 @@ def test_acceptance_test_second_week_1():
             "language" : "Java"
         },
         {
+            "users" : ["Jake","cameron"],
+            "language" : "N/A"
+        },
+        {
             "users" : ["sarah"],
             "language" : "unsuccessful"
         }
     ]
-    assert pairings == slightly_correct_pairings
+    assert pairings == sub_optimal_pairings
 
 
 
-# def test_acceptance_test_second_week():
-#     previous_pairings = {
-#          7 : {5 : "Javascript"},  #Cam and Andras Javascript
-#          5 : {7 : "Javascript"},
-#          6 : {1 : "Kotlin"},  #Mark and Ben Kotlin
-#          1 : {6 : "Kotlin"},
-#          4 : {3 : "Python"}, #George and Sarah Python
-#          3 : {4 : "Python"},
-#          8 : {2 : "Java"},  #Sophie and Joe Java
-#          2 : {8 : "Java"}
 
-#     }
-
-#     usersAndPreferences = matching.set_usersAndPreferences()
-#     pairings = matching.match(previous_pairings, usersAndPreferences)
-#     slightly_correct_pairings = {
-#         4: {8: 'Python'}, 
-#         8: {4: 'Python'}, 
-#         7: {3: 'Default'},
-#         3: {7: 'Default'},  
-#         6: {2: 'Kotlin'}, 
-#         2: {6: 'Kotlin'}, 
-#         5: {1: 'Java'}, 
-#         1: {5: 'Java'}        
-#      }
-#     assert pairings == slightly_correct_pairings
-
-# def run_all_tests():
-#     test_language_weightings()
-#     test_user_popularities()
-#     test_reformat_input()
-#     test_minimal_pairing()
-#     test_two_pairings()
-#     test_two_pairings_complex()
-#     test_acceptance_test()
+def run_all_tests():
+    test_language_weightings()
+    test_user_popularities()
+    test_reformat_input()
+    test_minimal_pairing()
+    test_two_pairings()
+    test_two_pairings_complex()
+    test_acceptance_test()
 
 
-# if __name__ == "__main__":
-#     test_language_weightings()
-#     test_user_popularities()
-#     test_reformat_input()
-#     test_minimal_pairing()
-#     test_two_pairings()
-#     test_two_pairings_complex()
-#     test_acceptance_test()
-#     #test_acceptance_test_second_week_1()
-#     #test_acceptance_test_second_week()
-#     #print("Everything passed")
+if __name__ == "__main__":
+    test_language_weightings()
+    test_user_popularities()
+    test_reformat_input()
+    test_minimal_pairing()
+    test_two_pairings()
+    test_two_pairings_complex()
+    test_acceptance_test()
+    #test_acceptance_test_second_week_1()
+    #test_acceptance_test_second_week()
+    #print("Everything passed")
