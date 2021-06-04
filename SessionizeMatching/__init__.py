@@ -18,7 +18,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             matchRequest = req_body.get('matchRequest')
 
     if matchRequest:
-        result =  matching.match(pastPairing, matchRequest)
+        result =  matching.match({}, matchRequest)
         return func.HttpResponse(body = json.dumps(result), mimetype = "application/json")
         # return func.HttpResponse(f"Hello, {matchRequest}. This HTTP triggered function executed successfully.")
     else:
