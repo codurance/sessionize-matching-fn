@@ -40,7 +40,7 @@ def minimal_pairings_recursive(prev_pairing, popularities, users_preferences, pa
         pairings.try_match_unsuccessful()
         return pairings
     #better to convert to a list of pairings as this will preserve the order and then go by first index
-    least_popular_user = popularities.sort_user_popularities(len(users_preferences))
+    least_popular_user = popularities.sort_user_popularities()
     preferences = users_preferences[least_popular_user]
     can_be_paired = False
     for preference in preferences:
