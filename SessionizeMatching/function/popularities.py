@@ -1,3 +1,4 @@
+from collections import OrderedDict
 
 class Popularities:
     def __init__(self, users_preferences):
@@ -23,8 +24,12 @@ class Popularities:
                 popularity += (self.language_popularities[language] * language_priority)
             self.user_popularities[user] = popularity
     
-    def sort_user_popularities(self):
+    def sort_user_popularities(self, numOfUsers):
         self.user_popularities = dict(sorted(self.user_popularities.items(), key=lambda item: item[1]))
+        OrderedPopularities = OrderedDict(self.user_popularities)
+        if numOfUsers < 4:
+            most_popular = (list(OrderedPopularities)[-1])
+            return most_popular
         return next(iter(self.user_popularities))
     
     def remove_from_user_popularities(self, toRemove):

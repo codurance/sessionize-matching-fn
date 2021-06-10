@@ -1,6 +1,7 @@
 #import pandas as pd
 from SessionizeMatching.function.pairing_list import PairingsList
 from SessionizeMatching.function.popularities import Popularities
+from SessionizeMatching.function.optimal_state_run import OptimatStateRun
 
 
 def match(prev_pairing, users_preferences):
@@ -10,6 +11,8 @@ def match(prev_pairing, users_preferences):
     popularities = Popularities(users_preferences)
 
     pairings = create_pairings(prev_pairing_object, popularities, users_preferences)
+    optimal_pairings = OptimatStateRun(pairings, users_preferences)
+    pairings = optimal_pairings.recalculate()
 
     return pairings.listOfPairings
 
@@ -30,16 +33,6 @@ def create_pairings(prev_pairing_object, popularities, users_preferences):
     pairings = minimal_pairings_recursive(prev_pairing_object, popularities, users_preferences, pairings)
     #quality_of_pairing = calculate_quality_of_pairing(pairings.copy(), users_preferences, 0)
     return pairings
-
-
-#TO BE INTRODUCED MVP 2
-# def calculate_quality_of_pairing(pairings, users_preferences, quality):
-#     if (bool(pairings)):
-#         first_pair = next(iter(pairings))
-#         print(first_pair) 
-#         preferences = users_preferences[first_pair] #1[groovy, python c#]
-#         print (preferences)
-#     return quality
         
 
 def minimal_pairings_recursive(prev_pairing, popularities, users_preferences, pairings):
@@ -47,7 +40,7 @@ def minimal_pairings_recursive(prev_pairing, popularities, users_preferences, pa
         pairings.try_match_unsuccessful()
         return pairings
     #better to convert to a list of pairings as this will preserve the order and then go by first index
-    least_popular_user = popularities.sort_user_popularities()
+    least_popular_user = popularities.sort_user_popularities(len(users_preferences))
     preferences = users_preferences[least_popular_user]
     can_be_paired = False
     for preference in preferences:
@@ -101,37 +94,6 @@ def find_user_with_same_lang_pref(prev_pairing, users_preferences, popularities,
     if first_partner == potential_partner:
         return set_unsuccessful_partner_with_no_match(pairings, popularities, first_partner)
     return set_successful_partner_with_match(pairings, first_partner, potential_partner, preference, popularities)
-
-
-
-
-
-# def minimal_pairings(user_popularities, language_popularities, users_preferences):
-#     pairings = Pairings() 
-#     user_popularities =  dict(sorted(user_popularities.items(), key=lambda item: item[1]))
-#     for user in user_popularities.keys():
-#             preferences = users_preferences[user]
-#             for preference in preferences:
-#                 if not pairings.check_if_user_is_unpaired(user):
-#                     language_popularity = language_popularities[preference]
-#                     if language_popularity != 0:
-#                         pairings = find_user_with_same_lang_pref(users_preferences, user_popularities, preference, user, pairings)
-#     return pairings
-        
-
-# def find_user_with_same_lang_pref_using_pandas(users_preferences, user_popularities, preference, first_partner):
-#     df = pd.DataFrame.from_dict(users_preferences)
-#     print("dataframe", df)
-#     print("preference Find ", preference)
-#     for second_partner in user_popularities.keys():
-#         if second_partner != first_partner:
-#             df_users_with_matching_pref = df.gt(preference)
-#             # print("dataframe found: ",df_users_with_matching_pref)
-#             # print("attempt2",df[df.eq(preference).any(1)])
-#             print("attempt3", df.isin([preference]).any())
-#             users_with_matching_pref = list(df_users_with_matching_pref.columns.values)
-
-#             create_pairing(first_partner, second_partner, preference)
 
         
 

@@ -2,7 +2,9 @@ import sys
 
 from SessionizeMatching.function import matching
 from SessionizeMatching.function import popularities
-from . import resources
+# from unittest import AssertCountEqual
+
+# from . import resources
 #from SessionizeMatching.function.tests.resources import resources
 
 def set_usersAndPreferences():
@@ -74,6 +76,47 @@ def set_usersAndPreferences():
     ]
 
     return usersAndPreferences
+
+def test_uneven_pairing():
+    usersAndPreferences = [
+        {
+            "user": "1",
+            "preferences": {
+                    "pref1": "CLOJURE",
+                    "pref2": "TS",
+                    "pref3": "RUBY"
+            }
+        },
+        {
+            "user": "2",
+             "preferences": {
+                    "pref1": "CLOJURE",
+                    "pref2": "CP",
+                    "pref3": "DART"
+            }
+        },
+        {
+            "user": "3",
+             "preferences": {
+                    "pref1": "PYTHON",
+                    "pref2": "CLOJURE",
+                    "pref3": "PHP"
+            }
+        }
+    ]
+    pairings = matching.match({}, usersAndPreferences)
+    correct_pairing = [
+        {
+            "users" : ["2", "1"],
+            "language": "CLOJURE"
+        },        
+        {
+            "users" : ["3"],
+            "language": "unsuccessful"
+        }
+    ]
+    assert pairings == correct_pairing
+
 
 def test_reformat_input():
     original_format = [
@@ -159,11 +202,13 @@ def test_minimal_pairing():
     pairings = matching.match({}, usersAndPreferences)
     correct_pairing = [
         {
-            "users" : ["1", "2"],
+            "users" : ["2", "1"],
             "language": "Java"
         }
     ]
     assert pairings == correct_pairing
+    # assertCountEqual(pairings, correct_pairing)
+    # assert sorted(pairings) == sorted(correct_pairing)
 
 
 def test_two_pairings():

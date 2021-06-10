@@ -38,6 +38,7 @@ class PairingsList:
 
     def try_match_unsuccessful(self):
         to_be_paired = [self.listUnsuccessful[i:i + 2] for i in range(0, len(self.listUnsuccessful), 2)]
+        print (to_be_paired)
         for new_pairing in to_be_paired:
             if len(new_pairing) > 1:
                 self.addPairing(new_pairing[0], new_pairing[1], self.paired_without_preference)
